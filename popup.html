@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Job Hunter Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Job Hunter Pro</h1>
+    
+    <div class="section">
+      <h2>Auto Application</h2>
+      <label class="switch">
+        <input type="checkbox" id="autoApply">
+        <span class="slider"></span>
+      </label>
+      <span>Enable auto-apply</span>
+    </div>
+
+    <div class="section">
+      <h2>Resume Optimization</h2>
+      <button id="optimizeResume" class="btn btn-primary">Optimize Current Resume</button>
+      <div id="optimizationStatus"></div>
+    </div>
+
+    <div class="section">
+      <h2>Application Stats</h2>
+      <div id="stats">
+        <p>Applications sent: <span id="appCount">0</span></p>
+        <p>Success rate: <span id="successRate">0%</span></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Settings</h2>
+      <button id="openSettings" class="btn btn-secondary">Configure Resume</button>
+    </div>
+
+    <div class="footer">
+      <p>Version 1.0.0</p>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
