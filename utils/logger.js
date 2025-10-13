@@ -10,6 +10,7 @@ const Logger = (() => {
     console[level]('[JobHunter]', ...args);
   };
 
+// Public API
   return {
     on:  () => chrome.storage.local.set({ [DEBUG_KEY]: true }, () => enabled = true),
     off: () => chrome.storage.local.set({ [DEBUG_KEY]: false }, () => enabled = false),
