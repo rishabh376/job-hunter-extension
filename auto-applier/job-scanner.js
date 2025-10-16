@@ -34,7 +34,7 @@ const JobScanner = (() => {
       res(recent.length);
     });
   });
-
+// Extract the minimum salary from a string like "$60,000 - $80,000 a year"
   const extractSalary = (txt) => {
     const m = txt.match(/\$?(\d{1,3}(?:,\d{3})*)/g);
     if (!m) return Infinity;
