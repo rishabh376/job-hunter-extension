@@ -14,3 +14,4 @@ const StorageManager = (() => {
     bytesLeft: (cb) => AREA.getBytesInUse(cb) // quota helper
   };
 })();
+
