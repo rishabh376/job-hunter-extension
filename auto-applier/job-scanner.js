@@ -45,3 +45,6 @@ const JobScanner = (() => {
   return { shouldApply };
 })();
 
+
+export default JobScanner;
+// Record an application timestamp
