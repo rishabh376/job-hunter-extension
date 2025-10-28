@@ -48,3 +48,5 @@ const JobScanner = (() => {
 
 export default JobScanner;
 // Record an application timestamp
+
+
