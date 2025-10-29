@@ -37,3 +37,4 @@ const ApplicationTracker = (() => {
 
   return { log, getStats };
 })();
+
