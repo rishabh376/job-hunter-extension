@@ -197,3 +197,4 @@ if (document.readyState === 'loading') {
   new JobHunterContent();
 }
 
+
