@@ -20,3 +20,4 @@ const Logger = (() => {
     error: (...a) => log('error', ...a)
   };
 })();
+
