@@ -29,3 +29,6 @@ const KeywordExtractor = (() => {
 
   return { extract };
 })();
+
+// CommonJS export for tests
+try { if (typeof module !== 'undefined') module.exports = KeywordExtractor; } catch(e){}

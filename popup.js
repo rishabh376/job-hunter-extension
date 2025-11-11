@@ -11,6 +11,94 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStats(data.applicationStats);
   });
 
+  // Load optimized resume preview
+  const optimizedPreview = document.getElementById('optimizedResumePreview');
+  const downloadBtn = document.getElementById('downloadOptimized');
+  const validationErrors = document.getElementById('validationErrors');
+  const unlockStatus = document.getElementById('unlockStatus');
+  const loadOptimized = () => {
+    chrome.storage.sync.get(['optimizedResume'], (r) => {
+      const o = r && r.optimizedResume;
+      optimizedPreview.textContent = o ? JSON.stringify(o, null, 2) : 'No optimized resume yet.';
+      // Validate schema and show friendly errors
+      try {
+        if (o) {
+          const result = SchemaValidator.validateOptimizedResume(o);
+          if (!result.valid) {
+            validationErrors.textContent = result.errors.join('; ');
+            optimizedPreview.style.borderColor = '#f8d7da';
+          } else {
+            validationErrors.textContent = '';
+            optimizedPreview.style.borderColor = '#eee';
+          }
+        } else {
+          validationErrors.textContent = '';
+          optimizedPreview.style.borderColor = '#eee';
+        }
+      } catch (e) {
+        validationErrors.textContent = 'Validation failed: ' + e.message;
+      }
+    });
+  };
+  loadOptimized();
+
+  // Query background for API unlocked status
+  chrome.runtime.sendMessage({ action: 'getApiUnlockedStatus' }, (resp) => {
+    const unlocked = resp && resp.unlocked;
+    unlockStatus.textContent = unlocked ? 'API: unlocked for session' : 'API: locked (open Options to unlock)';
+    unlockStatus.style.color = unlocked ? '#1b5e20' : '#bf360c';
+  });
+
+  // Inline unlock/lock controls
+  const popupPass = document.getElementById('popupPassphrase');
+  const popupUnlockBtn = document.getElementById('popupUnlockBtn');
+  const popupLockBtn = document.getElementById('popupLockBtn');
+
+  popupUnlockBtn.addEventListener('click', async () => {
+    const pass = popupPass.value;
+    if (!pass) { unlockStatus.textContent = 'Enter passphrase'; return; }
+    unlockStatus.textContent = 'Unlocking...';
+    // Read encrypted key from storage
+    chrome.storage.sync.get(['encryptedOpenaiApiKey'], async (r) => {
+      const blob = r && r.encryptedOpenaiApiKey;
+      if (!blob) { unlockStatus.textContent = 'No encrypted key stored (use Options)'; return; }
+      try {
+        const plain = await CryptoHelper.decryptText(pass, blob);
+        // Send to background to unlock for session
+        chrome.runtime.sendMessage({ action: 'unlockApiKey', apiKey: plain }, (resp) => {
+          const ok = resp && resp.unlocked;
+          unlockStatus.textContent = ok ? 'API: unlocked for session' : 'Unlock failed';
+          unlockStatus.style.color = ok ? '#1b5e20' : '#bf360c';
+        });
+      } catch (e) {
+        unlockStatus.textContent = 'Decrypt failed: ' + e.message;
+        unlockStatus.style.color = '#bf360c';
+      }
+    });
+  });
+
+  popupLockBtn.addEventListener('click', () => {
+    // Lock by asking background to clear unlocked key
+    chrome.runtime.sendMessage({ action: 'unlockApiKey', apiKey: null }, (resp) => {
+      unlockStatus.textContent = 'API: locked';
+      unlockStatus.style.color = '#bf360c';
+    });
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    chrome.storage.sync.get(['optimizedResume'], (r) => {
+      const o = r && r.optimizedResume;
+      if (!o) return;
+      const blob = new Blob([JSON.stringify(o, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'optimized_resume.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  });
+
   // Auto-apply toggle
   autoApplyToggle.addEventListener('change', function() {
     chrome.storage.sync.set({ autoApply: this.checked });
@@ -20,20 +108,16 @@ document.addEventListener('DOMContentLoaded', function() {
   optimizeBtn.addEventListener('click', async function() {
     optimizeBtn.disabled = true;
     optimizeBtn.textContent = 'Optimizing...';
-    
-    // Get current tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    // Send message to content script
-    chrome.tabs.sendMessage(tab.id, { action: 'optimizeResume' }, function(response) {
+    // Ask the background service worker to optimize the resume (it will fetch job data from the active tab)
+    chrome.runtime.sendMessage({ action: 'optimizeResumeRequest' }, function(response) {
       if (response && response.success) {
-        document.getElementById('optimizationStatus').innerHTML = 
+        document.getElementById('optimizationStatus').innerHTML =
           '<p style="color: green;">Resume optimized successfully!</p>';
       } else {
-        document.getElementById('optimizationStatus').innerHTML = 
-          '<p style="color: red;">Optimization failed. Please try again.</p>';
+        document.getElementById('optimizationStatus').innerHTML =
+          '<p style="color: red;">Optimization failed. ' + (response && response.error ? response.error : 'Please try again.') + '</p>';
       }
-      
+
       optimizeBtn.disabled = false;
       optimizeBtn.textContent = 'Optimize Current Resume';
     });
