@@ -103,19 +103,60 @@ class JobHunterContent {
 
   async autoApply() {
     console.log('Job Hunter Pro: Starting auto-application');
-    
-    // Find apply button
-    const applyButton = await this.findApplyButton();
-    if (applyButton) {
-      // Click apply button
-      applyButton.click();
-      
-      // Wait for application form
-      await this.wait(2000);
-      
-      // Fill application form
-      await this.fillApplicationForm();
+    // More robust auto-apply with retries and waiting for form fields
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const applyButton = await this.findApplyButton();
+        if (!applyButton) {
+          console.log('No apply button found (attempt', attempt, ')');
+          await this.wait(1000 * attempt);
+          continue;
+        }
+
+        // Click the apply/start application control
+        applyButton.scrollIntoView({ block: 'center', behavior: 'auto' });
+        applyButton.click();
+
+        // Wait for a form or input to appear
+        const formSelector = 'form, input, textarea, [role="dialog"]';
+        const appeared = await this.waitForSelector(formSelector, 8000 + (attempt * 2000));
+        if (!appeared) {
+          console.log('Application form did not appear (attempt', attempt, ')');
+          await this.wait(1000);
+          continue;
+        }
+
+        // Fill application form
+        await this.fillApplicationForm();
+
+        // Try to click submit/save if present
+        const submitSelectors = ['button[type="submit"]', 'button:contains("Submit")', 'button:contains("Send")', 'input[type="submit"]', 'button:contains("Finish")'];
+        for (const s of submitSelectors) {
+          const el = document.querySelector(s);
+          if (el) {
+            el.click();
+            break;
+          }
+        }
+
+        console.log('Auto-apply attempted');
+        break;
+      } catch (err) {
+        console.warn('autoApply attempt failed', attempt, err);
+        await this.wait(1000 * attempt);
+      }
     }
+  }
+
+  async waitForSelector(selector, timeout = 5000) {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const el = document.querySelector(selector);
+      if (el) return el;
+      await this.wait(250);
+    }
+    return null;
   }
 
   async findApplyButton() {
@@ -124,13 +165,16 @@ class JobHunterContent {
       '.apply-button',
       '[class*="apply"]',
       'a[href*="apply"]',
-      'button:contains("Apply")',
       'input[value*="Apply"]'
     ];
 
     for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element) return element;
+      try {
+        const element = document.querySelector(selector);
+        if (element) return element;
+      } catch (e) {
+        // ignore invalid selectors
+      }
     }
 
     // Try XPath
@@ -163,14 +207,27 @@ class JobHunterContent {
     }
 
     // Upload resume if file input found
-    const fileInput = document.querySelector('input[type="file"]');
-    if (fileInput && resumeData.resumeFile) {
-      // Convert base64 to file
-      const file = this.base64ToFile(resumeData.resumeFile, 'resume.pdf');
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      fileInput.files = dataTransfer.files;
-    }
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput && resumeData.resumeFile) {
+        // Convert base64 to file (use FileUtils if available)
+        let file;
+        try {
+          if (typeof FileUtils !== 'undefined' && FileUtils.base64ToFile) {
+            file = FileUtils.base64ToFile(resumeData.resumeFile, resumeData.resumeFileName || 'resume.pdf');
+          } else {
+            file = this.base64ToFile(resumeData.resumeFile, resumeData.resumeFileName || 'resume.pdf');
+          }
+        } catch (e) {
+          console.warn('Failed to create File object, falling back to dataTransfer workaround', e);
+        }
+        try {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          fileInput.files = dataTransfer.files;
+        } catch (e) {
+          console.warn('Unable to set file input programmatically', e);
+        }
+      }
   }
 
   base64ToFile(base64, filename) {
@@ -196,5 +253,65 @@ if (document.readyState === 'loading') {
 } else {
   new JobHunterContent();
 }
+
+// Listen for messages from popup/background
+chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!request || !request.action) return;
+
+  if (request.action === 'optimizeResume') {
+    // Very small local stub: pretend we optimized the resume. In a full build this would
+    // call the resume optimizer in `resume-builder` via ApiConnector or background proxy.
+    console.log('Job Hunter Pro: Received optimizeResume request');
+    // Respond quickly so popup UI can update
+    sendResponse({ success: true });
+    return; // keep short-lived
+  }
+
+  if (request.action === 'startAutoApply') {
+    console.log('Job Hunter Pro: startAutoApply message received');
+    (async () => { try { await new JobHunterContent().autoApply(); } catch (e) { console.error(e); } })();
+    sendResponse({ started: true });
+    return;
+  }
+
+  if (request.action === 'getJobDescription') {
+    // Return extracted job description (best-effort)
+    const jd = (new JobHunterContent()).jobData?.description || document.querySelector('body')?.innerText?.slice(0, 3000) || '';
+    sendResponse({ jobDescription: jd });
+    return;
+  }
+
+  if (request.action === 'quickApply') {
+    // Trigger a quick apply from popup/context menu
+    (async () => { try { const c = new JobHunterContent(); await c.autoApply(); } catch (e) { console.error(e); } })();
+    sendResponse({ started: true });
+    return;
+  }
+
+  if (request.action === 'toggleJobHunter') {
+    // Toggle UI state on the page (simple example: add a badge)
+    const elId = 'job-hunter-pro-badge';
+    let el = document.getElementById(elId);
+    if (el) {
+      el.remove();
+      sendResponse({ toggled: 'off' });
+    } else {
+      el = document.createElement('div');
+      el.id = elId;
+      el.textContent = 'Job Hunter Active';
+      el.style.position = 'fixed';
+      el.style.right = '12px';
+      el.style.bottom = '12px';
+      el.style.background = '#1a73e8';
+      el.style.color = 'white';
+      el.style.padding = '6px 10px';
+      el.style.borderRadius = '6px';
+      el.style.zIndex = 999999;
+      document.body.appendChild(el);
+      sendResponse({ toggled: 'on' });
+    }
+    return;
+  }
+});
 
 

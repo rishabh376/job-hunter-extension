@@ -1,4 +1,14 @@
 // Background service worker
+// Load shared utilities
+try {
+  importScripts('utils/api-connector.js');
+  importScripts('utils/crypto.js');
+} catch (e) {
+  console.warn('Could not import utilities in background:', e);
+}
+
+// In-memory unlocked API key (session only)
+let unlockedApiKey = null;
 chrome.runtime.onInstalled.addListener(function() {
   console.log('Job Hunter Pro installed');
   
@@ -17,6 +27,67 @@ chrome.runtime.onInstalled.addListener(function() {
 
 // Handle messages from content script
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  // Background optimization request from popup
+  if (request.action === 'optimizeResumeRequest') {
+    (async () => {
+      try {
+        // Find active tab
+        const tabs = await new Promise(res => chrome.tabs.query({ active: true, currentWindow: true }, res));
+        const tab = tabs && tabs[0];
+        if (!tab) return sendResponse({ success: false, error: 'No active tab' });
+
+        // Ask content script for job description
+        const jd = await new Promise((res) => {
+          chrome.tabs.sendMessage(tab.id, { action: 'getJobDescription' }, (resp) => res(resp && resp.jobDescription));
+        });
+
+        // Get resume data and api settings
+        const stored = await new Promise(res => chrome.storage.sync.get(['resumeData','openaiApiKey','aiProvider','aiModel'], res));
+        const resumeData = (stored && stored.resumeData) || null;
+  // Prefer in-memory unlocked key, otherwise fallback to stored plain key
+  const apiKey = unlockedApiKey || ((stored && stored.openaiApiKey) ? stored.openaiApiKey : null);
+        const provider = (stored && stored.aiProvider) || 'openai';
+        const model = (stored && stored.aiModel) || 'gpt-3.5-turbo';
+
+  if (!resumeData) return sendResponse({ success: false, error: 'No resume data found in settings' });
+  if (!apiKey) return sendResponse({ success: false, error: 'No API key available. Unlock via Options.' });
+
+        // Build prompt
+        // Stronger prompt: ask model to return only JSON and wrap result in a JSON fence.
+        const userPrompt = `Optimize the following resume for this job description. Return only valid JSON (no explanatory text) with the same structure as the input. Wrap the JSON in triple backticks and label as json.\n\nJob Description:\n${jd || 'N/A'}\n\nCurrent Resume:\n${JSON.stringify(resumeData, null, 2)}`;
+
+        const messages = [
+          { role: 'system', content: 'You are an expert resume writer and ATS optimization specialist. Always return valid JSON and nothing else.' },
+          { role: 'user', content: userPrompt }
+        ];
+
+        // Call API connector
+        const result = await ApiConnector.call({ provider, apiKey, model, messages, max_tokens: 1500, temp: 0.7 });
+
+        // Try to extract JSON block from model output robustly
+        let optimized = null;
+        try {
+          // Attempt direct parse
+          optimized = JSON.parse(result);
+        } catch (e1) {
+          // Try to extract JSON between code fences ```json ... ``` or ``` ... ```
+          const fenceMatch = result.match(/```(?:json\s*)?([\s\S]*?)```/i);
+          const candidate = fenceMatch ? fenceMatch[1].trim() : result.trim();
+          try { optimized = JSON.parse(candidate); } catch (e2) { optimized = { optimizedText: result }; }
+        }
+
+        // Persist optimized resume for later retrieval
+        await new Promise(res => chrome.storage.sync.set({ optimizedResume: optimized }, res));
+
+        sendResponse({ success: true, optimized });
+      } catch (err) {
+        console.error('optimizeResumeRequest error', err);
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true; // keep channel open for async sendResponse
+  }
+
   if (request.action === 'jobDetected') {
     console.log('Job detected:', request.jobData);
     
@@ -44,6 +115,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.tabs.sendMessage(sender.tab.id, { action: 'startAutoApply' });
       }
     });
+  }
+  
+  // Accept unlocked API key for session
+  if (request.action === 'unlockApiKey') {
+    unlockedApiKey = request.apiKey || null;
+    console.log('Background: unlocked API key for session:', !!unlockedApiKey);
+    sendResponse({ unlocked: !!unlockedApiKey });
+    return;
+  }
+  
+  // Report whether API key is unlocked in memory
+  if (request.action === 'getApiUnlockedStatus') {
+    sendResponse({ unlocked: !!unlockedApiKey });
+    return;
   }
 });
 

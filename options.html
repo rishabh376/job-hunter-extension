@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Job Hunter Pro - Settings</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif;padding:16px;max-width:720px}
+    label{display:block;margin-top:8px}
+    input[type=text], input[type=email], input[type=tel]{width:100%;padding:6px;margin-top:4px}
+    .row{display:flex;gap:8px}
+    .col{flex:1}
+    .actions{margin-top:12px}
+    .small{font-size:12px;color:#666}
+  </style>
+</head>
+<body>
+  <h1>Job Hunter Pro — Settings</h1>
+  <p class="small">Configure your resume and application preferences. Resume file (PDF) will be stored locally in extension storage.</p>
+
+  <label>Auto-apply
+    <input type="checkbox" id="autoApply">
+  </label>
+
+  <h2>Personal Info</h2>
+  <div class="row">
+    <div class="col">
+      <label>First name<input type="text" id="firstName"></label>
+    </div>
+    <div class="col">
+      <label>Last name<input type="text" id="lastName"></label>
+    </div>
+  </div>
+  <label>Email<input type="email" id="email"></label>
+  <label>Phone<input type="tel" id="phone"></label>
+  <div class="row">
+    <div class="col"><label>City<input type="text" id="city"></label></div>
+    <div class="col"><label>State<input type="text" id="state"></label></div>
+  </div>
+
+  <h2>Resume File (PDF)</h2>
+  <input type="file" id="resumeFile" accept="application/pdf">
+  <div id="resumeInfo" class="small"></div>
+
+  <h2>AI / Resume Optimization</h2>
+  <label>Provider
+    <select id="aiProvider">
+      <option value="openai">OpenAI</option>
+      <option value="ollama">Ollama (local)</option>
+    </select>
+  </label>
+  <label>API Key (if using OpenAI)<input type="text" id="openaiApiKey" placeholder="sk-..."></label>
+  <label>Model<input type="text" id="aiModel" placeholder="gpt-3.5-turbo"></label>
+  <label>Encryption passphrase (optional)
+    <input type="password" id="apiPassphrase" placeholder="Passphrase to encrypt API key">
+  </label>
+  <div style="margin-top:6px">
+    <button id="encryptKeyBtn" class="btn">Encrypt & Save API Key</button>
+    <button id="unlockKeyBtn" class="btn">Unlock API Key for Session</button>
+    <span id="apiStatus" class="small"></span>
+  </div>
+
+  <div class="actions">
+    <button id="saveBtn" class="btn">Save</button>
+    <button id="clearBtn" class="btn">Clear</button>
+    <span id="status" class="small"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
