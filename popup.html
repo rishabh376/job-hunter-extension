@@ -9,9 +9,11 @@
   <div class="container">
     <h1>Job Hunter Pro</h1>
     <div id="unlockStatus" style="font-size:12px;color:#666;margin-bottom:6px">API: unknown</div>
-    <div style="margin-bottom:8px">
-      <input type="password" id="popupPassphrase" placeholder="Enter passphrase to unlock" style="width:60%;padding:6px" />
+    <div style="margin-bottom:8px;display:flex;gap:6px;align-items:center">
+      <input type="password" id="popupPassphrase" placeholder="Enter passphrase to unlock" style="flex:1;padding:6px" />
+      <button id="togglePassVisible" class="btn" title="Show/Hide">👁</button>
       <button id="popupUnlockBtn" class="btn">Unlock</button>
+      <button id="popupClipboardUnlockBtn" class="btn">Unlock from clipboard</button>
       <button id="popupLockBtn" class="btn">Lock</button>
     </div>
     
@@ -57,6 +59,7 @@
     </div>
   </div>
   
+  <script src="utils/ajv.real.js"></script>
   <script src="utils/crypto.js"></script>
   <script src="utils/schema-validator.js"></script>
   <script src="popup.js"></script>

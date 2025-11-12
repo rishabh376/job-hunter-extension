@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const popupPass = document.getElementById('popupPassphrase');
   const popupUnlockBtn = document.getElementById('popupUnlockBtn');
   const popupLockBtn = document.getElementById('popupLockBtn');
+  const popupClipboardUnlockBtn = document.getElementById('popupClipboardUnlockBtn');
+  const togglePassVisible = document.getElementById('togglePassVisible');
 
   popupUnlockBtn.addEventListener('click', async () => {
     const pass = popupPass.value;
@@ -83,6 +85,42 @@ document.addEventListener('DOMContentLoaded', function() {
       unlockStatus.textContent = 'API: locked';
       unlockStatus.style.color = '#bf360c';
     });
+  });
+
+  // Toggle passphrase visibility
+  togglePassVisible.addEventListener('click', () => {
+    if (popupPass.type === 'password') popupPass.type = 'text'; else popupPass.type = 'password';
+  });
+
+  // Unlock from clipboard
+  popupClipboardUnlockBtn.addEventListener('click', async () => {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      unlockStatus.textContent = 'Clipboard API not available';
+      return;
+    }
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) { unlockStatus.textContent = 'Clipboard is empty'; return; }
+      popupPass.value = text;
+      // Try to clear clipboard after reading for extra security (best-effort)
+      let cleared = false;
+      try {
+        await navigator.clipboard.writeText('');
+        cleared = true;
+      } catch (e) {
+        // ignore — not critical
+      }
+      if (cleared) {
+        unlockStatus.textContent = 'Clipboard cleared after unlock';
+        setTimeout(() => {
+          unlockStatus.textContent = '';
+        }, 1200);
+      }
+      // Trigger unlock flow
+      popupUnlockBtn.click();
+    } catch (e) {
+      unlockStatus.textContent = 'Clipboard read failed: ' + e.message;
+    }
   });
 
   downloadBtn.addEventListener('click', () => {
