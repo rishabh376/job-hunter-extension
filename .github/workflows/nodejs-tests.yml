@@ -2,9 +2,9 @@ name: Node.js Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -25,3 +25,6 @@ jobs:
       - name: Run tests
         run: |
           npm test
+      - name: Upload test results
+        if: ${{ always() }}
+        run: echo "Tests finished with exit code ${{ job.status }}"

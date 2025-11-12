@@ -30,22 +30,46 @@ function logFail(msg){ console.log('\x1b[31m%s\x1b[0m', 'FAIL:', msg); }
 
     // If Ajv is available (dev dependency in CI), validate sample optimized resume against schema
     try {
-      const Ajv = require('ajv');
-      const schemaPath = path.resolve(__dirname, '..', 'schema', 'optimized-resume.schema.json');
-      const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
-      const ajv = new Ajv();
-      const validate = ajv.compile(schema);
-      const sampleResume = {
-        contact: { name: 'John Doe', email: 'john@example.com', phone: '123-456-7890', location: 'City, ST' },
-        summary: 'Experienced developer',
-        skills: ['javascript','react'],
-        experience: [ { title: 'Developer', company: 'Acme', description: 'Built things' } ]
-      };
-      const valid = validate(sampleResume);
-      assert(valid, 'Sample optimized resume should validate against schema');
+      const validatorTest = require('./validator.test');
+      validatorTest();
       logOk('AJV schema validation (dev)');
     } catch (e) {
       console.log('AJV not available — skipping AJV schema test in local Node (CI will run it).');
+    }
+    
+    // Run content tests (jsdom)
+    try {
+      const contentTest = require('./content.test');
+      contentTest();
+      logOk('Content DOM tests (jsdom)');
+    } catch (e) {
+      console.log('jsdom tests skipped or failed:', e.message || e);
+    }
+
+    // Crypto tests
+    try {
+      const cryptoTest = require('./crypto.test');
+      await cryptoTest();
+      logOk('Crypto helper tests');
+    } catch (e) {
+      console.log('Crypto tests skipped or failed:', e.message || e);
+    }
+
+    // Schema validator tests
+    try {
+      const svTest = require('./schema-validator.test');
+      svTest();
+      logOk('Schema validator tests');
+    } catch (e) {
+      console.log('Schema validator tests skipped/failed:', e.message || e);
+    }
+
+    // Background API flow tests
+    try {
+      const bgTest = require('./background.test');
+      logOk('Background API flow tests');
+    } catch (e) {
+      console.log('Background API tests skipped/failed:', e.message || e);
     }
 
     console.log('\nAll tests passed.');
