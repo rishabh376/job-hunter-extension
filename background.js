@@ -42,15 +42,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
 
         // Get resume data and api settings
-        const stored = await new Promise(res => chrome.storage.sync.get(['resumeData','openaiApiKey','aiProvider','aiModel'], res));
+        const stored = await new Promise(res => chrome.storage.sync.get(['resumeData','openaiApiKey','aiProvider','aiModel','encryptedOpenaiApiKey'], res));
         const resumeData = (stored && stored.resumeData) || null;
-  // Prefer in-memory unlocked key, otherwise fallback to stored plain key
-  const apiKey = unlockedApiKey || ((stored && stored.openaiApiKey) ? stored.openaiApiKey : null);
+        // Prefer in-memory unlocked key, otherwise fallback to stored plain key
+        const apiKey = unlockedApiKey || ((stored && stored.openaiApiKey) ? stored.openaiApiKey : null);
         const provider = (stored && stored.aiProvider) || 'openai';
         const model = (stored && stored.aiModel) || 'gpt-3.5-turbo';
 
-  if (!resumeData) return sendResponse({ success: false, error: 'No resume data found in settings' });
-  if (!apiKey) return sendResponse({ success: false, error: 'No API key available. Unlock via Options.' });
+        if (!resumeData) return sendResponse({ success: false, error: 'No resume data found in settings' });
+        if (!apiKey) {
+          // If there's an encrypted key present, instruct the user to unlock via the popup/options
+          if (stored && stored.encryptedOpenaiApiKey) {
+            return sendResponse({ success: false, error: 'API key is encrypted. Please unlock it in the extension popup or Options.' });
+          }
+          return sendResponse({ success: false, error: 'No API key available. Add it in Options or unlock it for session.' });
+        }
 
         // Build prompt
         // Stronger prompt: ask model to return only JSON and wrap result in a JSON fence.
@@ -62,7 +68,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         ];
 
         // Call API connector
-        const result = await ApiConnector.call({ provider, apiKey, model, messages, max_tokens: 1500, temp: 0.7 });
+        let result;
+        try {
+          result = await ApiConnector.call({ provider, apiKey, model, messages, max_tokens: 1500, temp: 0.7 });
+        } catch (apiErr) {
+          console.error('API call failed', apiErr);
+          return sendResponse({ success: false, error: 'AI provider call failed: ' + (apiErr && apiErr.message ? apiErr.message : apiErr) });
+        }
 
         // Try to extract JSON block from model output robustly
         let optimized = null;
