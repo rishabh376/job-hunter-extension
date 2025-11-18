@@ -142,6 +142,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     sendResponse({ unlocked: !!unlockedApiKey });
     return;
   }
+
+  // Get session status (used by options page)
+  if (request.action === 'getSessionStatus') {
+    sendResponse({ apiKeyUnlocked: !!unlockedApiKey });
+    return;
+  }
 });
 
 // Context menu click handler
