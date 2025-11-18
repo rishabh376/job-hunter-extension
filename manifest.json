@@ -19,6 +19,8 @@
     "https://*.ziprecruiter.com/*",
     "https://*.careerbuilder.com/*",
     "https://*.simplyhired.com/*"
+    ,
+    "https://api.openai.com/*"
   ],
   "background": {
     "service_worker": "background.js"
