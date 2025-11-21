@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const key = openaiApiKey?.value || '';
       const model = aiModel?.value || 'gpt-3.5-turbo';
 
-      if ((provider === 'openai' || provider === 'github') && !key.trim()) {
+      if ((provider === 'openai' || provider === 'github' || provider === 'google') && !key.trim()) {
         const r = await StoragePromise.get(['encryptedOpenaiApiKey']);
         if (r?.encryptedOpenaiApiKey) {
           setStatus(apiStatus, '🔒 Key is encrypted. Unlock it in Options or popup before validating.', 4000);
@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const model = aiModel?.value || 'gpt-3.5-turbo';
 
       // Validation
-      if ((provider === 'openai' || provider === 'github') && !key.trim()) {
+      if ((provider === 'openai' || provider === 'github' || provider === 'google') && !key.trim()) {
         const r = await StoragePromise.get(['encryptedOpenaiApiKey']);
         if (r?.encryptedOpenaiApiKey) {
           setStatus(apiStatus, '🔒 Key is encrypted. Unlock it before Test & Save.', 4000);

@@ -7,14 +7,51 @@ const ApiConnector = (() => {
   };
 
   const call = async ({provider = 'openai', apiKey, model, messages, max_tokens = 1000, temp = 0.7}) => {
-    const url  = ENDPOINTS[provider];
-    if (!url) throw new Error(`Unknown provider: ${provider}`);
-
     // Providers that require an API key
-    const requiresKey = provider === 'openai' || provider === 'github';
+    const requiresKey = provider === 'openai' || provider === 'github' || provider === 'google';
     if (requiresKey && (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '')) {
       throw new Error(`${provider} requires an API key. Please unlock or provide a valid key.`);
     }
+
+    // Helper: join chat-style messages into a single prompt (used for Google)
+    const messagesToPrompt = (msgs) => {
+      if (!Array.isArray(msgs)) return String(msgs || '');
+      return msgs.map(m => (m.role ? m.role.toUpperCase() + ': ' : '') + (m.content || '')).join('\n\n');
+    };
+
+    // Special handling for Google Generative Language API (REST)
+    if (provider === 'google') {
+      // Google expects model in the path and apiKey as query param for API key auth
+      const modelId = model || 'models/text-bison-001';
+      const promptText = messagesToPrompt(messages);
+      const url = `https://generativelanguage.googleapis.com/v1beta2/models/${encodeURIComponent(modelId)}:generateText?key=${encodeURIComponent(apiKey)}`;
+      const gbody = {
+        prompt: { text: promptText },
+        temperature: temp,
+        maxOutputTokens: max_tokens
+      };
+      const headers = { 'Content-Type': 'application/json' };
+      let res;
+      try {
+        res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(gbody) });
+      } catch (networkErr) {
+        throw new Error(`google network error: ${networkErr.message || networkErr}`);
+      }
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '<no body>');
+        throw new Error(`google error: ${res.status} ${res.statusText} - ${txt}`);
+      }
+      const json = await res.json().catch(() => null);
+      if (!json) throw new Error('google returned invalid JSON');
+      // Google returns `candidates` array with text in `output` or `content` depending on version
+      if (json.candidates && json.candidates[0]) return json.candidates[0].output || json.candidates[0].content || JSON.stringify(json);
+      // fallback
+      return JSON.stringify(json);
+    }
+
+    // Fallback for other providers (openai, github, ollama)
+    const url  = ENDPOINTS[provider];
+    if (!url) throw new Error(`Unknown provider: ${provider}`);
 
     const body = { model, messages, max_tokens, temperature: temp };
     const headers = { 'Content-Type': 'application/json' };

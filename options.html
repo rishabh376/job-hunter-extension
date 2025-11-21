@@ -56,13 +56,14 @@
   <div id="resumeInfo" class="small"></div>
 
   <h2>AI / Resume Optimization</h2>
-  <label>Provider
+    <label>Provider
     <select id="aiProvider">
       <option value="openai">OpenAI</option>
+      <option value="google">Google Generative API</option>
       <option value="ollama">Ollama (local)</option>
     </select>
   </label>
-  <label>API Key (if using OpenAI)<input type="text" id="openaiApiKey" placeholder="sk-..."></label>
+  <label>API Key (if using provider)<input type="text" id="openaiApiKey" placeholder="sk-... or GOOGLE_API_KEY"></label>
   <label>Model<input type="text" id="aiModel" placeholder="gpt-3.5-turbo"></label>
   <label>Encryption passphrase (optional)
     <input type="password" id="apiPassphrase" placeholder="Passphrase to encrypt API key">
