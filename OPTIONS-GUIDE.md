@@ -1,3 +1,35 @@
+# ---
+# **Copyright © 2025 Rishabh376**
+# Author: Rishabh376  
+# GitHub: https://github.com/rishabh376/job-hunter-extension
+# This documentation and code are original works. Please credit the author and project if reused.
+# ---
+# <img src="https://img.icons8.com/color/96/rocket.png" width="48" height="48" style="vertical-align:middle;"/> **Job Hunter Extension**
+# <img src="https://img.icons8.com/color/96/settings.png" width="32" height="32" style="vertical-align:middle;"/> **Options Page Features Guide**
+
+# Google Generative Language API Support
+
+### How to Set Up Google Provider
+1. In the Options page, select "Google" as your AI provider.
+2. Enter your Google API key (from Google Cloud Console > APIs & Services > Credentials).
+3. Enter the model name (e.g., `models/text-bison-001`). For Google, the model path is part of the URL.
+4. Click "Validate API Key" or "Test & Save Everything" to confirm your setup.
+
+### Message Conversion
+When using Google, chat-style messages are converted to a single prompt (role: content concatenation). This works for most validations and prompts. For advanced chat-like flows, the extension can be adapted to use Google’s recommended message schema.
+
+### Quotas and Billing
+Google Generative Language API calls are billed per token and subject to quota. Use small `maxOutputTokens` for validation and initial tests to avoid excessive charges.
+
+### Permissions
+The extension requires host permissions for `generativelanguage.googleapis.com` and `*.googleapis.com` (already included in manifest.json). Only API key usage is supported; OAuth would require a larger change.
+
+### Tips & Recommendations
+- Use explicit model names (e.g., `models/text-bison-001`).
+- Validate your API key before saving.
+- Monitor quota usage in Google Cloud Console.
+- For advanced chat flows, request support for Google’s structured message schema.
+
 # Options Page Features Guide
 
 ## Overview

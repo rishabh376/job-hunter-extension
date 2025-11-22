@@ -1,8 +1,38 @@
+# ---
+# **Copyright © 2025 Rishabh376**
+# Author: Rishabh376  
+# GitHub: https://github.com/rishabh376/job-hunter-extension
+# This documentation and code are original works. Please credit the author and project if reused.
+# ---
+# <img src="https://img.icons8.com/color/96/rocket.png" width="48" height="48" style="vertical-align:middle;"/> **Job Hunter Extension**
+# <img src="https://img.icons8.com/color/96/test-passed.png" width="32" height="32" style="vertical-align:middle;"/> **Manual Testing, Beta Testing & Deployment Guide**
+
 # Manual Testing, Beta Testing & Deployment Guide
-
 Complete step-by-step instructions for testing and deploying the Job Hunter extension.
-
 ---
+## Google Generative Language API Integration
+
+### Setup Steps
+1. Go to https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com and enable the API for your project.
+2. Create an API key in Google Cloud Console (IAM & Admin > Service Accounts or APIs & Services > Credentials).
+3. Copy your API key and paste it into the Options page under "API Key" when Google is selected as provider.
+4. For Google, the model path is included in the URL. Use the model resource name (e.g., `models/text-bison-001`).
+5. Make sure your manifest.json includes host permissions for `generativelanguage.googleapis.com` and `*.googleapis.com` (already added).
+
+### Message Conversion
+The extension converts chat-style messages to a single prompt for Google (role: content concatenation). This works for most validations and prompts. If you need a specialized chat-like flow, adapt to Google’s recommended message schema.
+
+### Quotas and Billing
+Google GenAI calls bill per token and are subject to quota. Test with small `maxOutputTokens` during validation to avoid excessive charges.
+
+### Permissions
+Host permissions for Google endpoints are required in manifest.json. OAuth is not currently supported; only API key usage is enabled. If you prefer OAuth, a larger change is needed (OAuth flow + consent screen).
+
+### Recommendations
+- Use explicit model names (e.g., `models/text-bison-001`).
+- Validate your API key before saving.
+- Monitor quota usage in Google Cloud Console.
+- For advanced chat flows, request support for Google’s structured message schema.
 
 ## PHASE 1: MANUAL TESTING (2-3 hours)
 
