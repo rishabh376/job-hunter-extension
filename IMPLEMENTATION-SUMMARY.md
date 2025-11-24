@@ -110,6 +110,7 @@ const data = await StoragePromise.get(['key']);
 // process data with try/catch
 ```
 
+
 ## UX Improvements
 
 ### Plain API Key Storage Warning
