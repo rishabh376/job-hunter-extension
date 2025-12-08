@@ -253,6 +253,8 @@ await StoragePromise.remove(['encryptedOpenaiApiKey']);
 ### Error Handling
 All handlers use try/catch with user-friendly messages:
 
+
+
 ```javascript
 try {
   const result = await ApiConnector.call({ /* config */ });
