@@ -256,6 +256,7 @@ All handlers use try/catch with user-friendly messages:
 
 
 ```javascript
+
 try {
   const result = await ApiConnector.call({ /* config */ });
   setStatus(apiStatus, '✅ Success message', 3000);
