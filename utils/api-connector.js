@@ -6,6 +6,27 @@ const ApiConnector = (() => {
     ollama: 'http://localhost:11434/api/chat'                       // local, $0
   };
 
+  // List available models for Google Gemini
+  const listGoogleModels = async (apiKey) => {
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+      throw new Error('Google provider requires an API key.');
+    }
+    const url = `https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(apiKey)}`;
+    const headers = { 'Content-Type': 'application/json' };
+    let res;
+    try {
+      res = await fetch(url, { method: 'GET', headers });
+    } catch (networkErr) {
+      throw new Error(`google network error: ${networkErr.message || networkErr}`);
+    }
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '<no body>');
+      throw new Error(`google error: ${res.status} ${res.statusText} - ${txt}`);
+    }
+    const json = await res.json().catch(() => null);
+    if (!json) throw new Error('google returned invalid JSON');
+    return json;
+  };
   const call = async ({provider = 'openai', apiKey, model, messages, max_tokens = 1000, temp = 0.7}) => {
     // Providers that require an API key
     const requiresKey = provider === 'openai' || provider === 'github' || provider === 'google';
@@ -86,11 +107,17 @@ const ApiConnector = (() => {
   };
 
 
-  return { call };
+  return { call, listGoogleModels };
 })();
+
 
 // Expose globally for options.js and popup.js
 if (typeof window !== 'undefined') {
   window.ApiConnector = ApiConnector;
+}
+
+// Export for Node.js usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ApiConnector;
 }
 
