@@ -6,6 +6,27 @@ const ApiConnector = (() => {
     ollama: 'http://localhost:11434/api/chat'                       // local, $0
   };
 
+  // List available models for Google Gemini
+  const listGoogleModels = async (apiKey) => {
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+      throw new Error('Google provider requires an API key.');
+    }
+    const url = `https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(apiKey)}`;
+    const headers = { 'Content-Type': 'application/json' };
+    let res;
+    try {
+      res = await fetch(url, { method: 'GET', headers });
+    } catch (networkErr) {
+      throw new Error(`google network error: ${networkErr.message || networkErr}`);
+    }
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '<no body>');
+      throw new Error(`google error: ${res.status} ${res.statusText} - ${txt}`);
+    }
+    const json = await res.json().catch(() => null);
+    if (!json) throw new Error('google returned invalid JSON');
+    return json;
+  };
   const call = async ({provider = 'openai', apiKey, model, messages, max_tokens = 1000, temp = 0.7}) => {
     // Providers that require an API key
     const requiresKey = provider === 'openai' || provider === 'github' || provider === 'google';
@@ -20,15 +41,16 @@ const ApiConnector = (() => {
     };
 
     // Special handling for Google Generative Language API (REST)
+
     if (provider === 'google') {
-      // Google expects model in the path and apiKey as query param for API key auth
-      const modelId = model || 'models/text-bison-001';
+      // Google Gemini API expects model in the path, e.g. 'gemini-pro', and v1 endpoint
+      const modelId = model || 'gemini-pro';
       const promptText = messagesToPrompt(messages);
-      const url = `https://generativelanguage.googleapis.com/v1beta2/models/${encodeURIComponent(modelId)}:generateText?key=${encodeURIComponent(apiKey)}`;
+      // v1 endpoint for Gemini
+      const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const gbody = {
-        prompt: { text: promptText },
-        temperature: temp,
-        maxOutputTokens: max_tokens
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { temperature: temp, maxOutputTokens: max_tokens }
       };
       const headers = { 'Content-Type': 'application/json' };
       let res;
@@ -43,8 +65,10 @@ const ApiConnector = (() => {
       }
       const json = await res.json().catch(() => null);
       if (!json) throw new Error('google returned invalid JSON');
-      // Google returns `candidates` array with text in `output` or `content` depending on version
-      if (json.candidates && json.candidates[0]) return json.candidates[0].output || json.candidates[0].content || JSON.stringify(json);
+      // Gemini returns candidates array with content.parts[0].text
+      if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0].text) {
+        return json.candidates[0].content.parts[0].text;
+      }
       // fallback
       return JSON.stringify(json);
     }
@@ -82,6 +106,18 @@ const ApiConnector = (() => {
     return JSON.stringify(json);
   };
 
-  return { call };
+
+  return { call, listGoogleModels };
 })();
+
+
+// Expose globally for options.js and popup.js
+if (typeof window !== 'undefined') {
+  window.ApiConnector = ApiConnector;
+}
+
+// Export for Node.js usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ApiConnector;
+}
 

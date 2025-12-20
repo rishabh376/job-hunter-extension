@@ -1,4 +1,10 @@
 // Job detection and auto-application logic
+
+// Import helpers if available (for modularity)
+// eslint-disable-next-line no-undef
+const JobScanner = window.JobScanner || (window.autoApplier && window.autoApplier.JobScanner);
+const FormFiller = window.FormFiller || (window.autoApplier && window.autoApplier.FormFiller);
+
 class JobHunterContent {
   constructor() {
     this.jobBoard = this.detectJobBoard();
@@ -52,7 +58,9 @@ class JobHunterContent {
     });
   }
 
+
   async extractJobData() {
+    // Modular extractor pattern for easy extension
     const extractors = {
       linkedin: this.extractLinkedInData,
       indeed: this.extractIndeedData,
@@ -62,9 +70,9 @@ class JobHunterContent {
       careerbuilder: this.extractCareerBuilderData,
       simplyhired: this.extractSimplyHiredData
     };
-
     const extractor = extractors[this.jobBoard];
-    return extractor ? extractor.call(this) : this.extractGenericData();
+    if (extractor) return extractor.call(this);
+    return this.extractGenericData();
   }
 
   extractLinkedInData() {
@@ -101,8 +109,18 @@ class JobHunterContent {
     });
   }
 
+
   async autoApply() {
     console.log('Job Hunter Pro: Starting auto-application');
+    // Use JobScanner to decide if we should apply (if available)
+    if (typeof JobScanner?.shouldApply === 'function') {
+      const should = await JobScanner.shouldApply(this.jobData || {});
+      if (!should) {
+        console.log('JobScanner: Skipping application based on rules');
+        return;
+      }
+    }
+
     // More robust auto-apply with retries and waiting for form fields
     const maxAttempts = 3;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -127,8 +145,13 @@ class JobHunterContent {
           continue;
         }
 
-        // Fill application form
-        await this.fillApplicationForm();
+        // Always prefer modular FormFiller for extensibility
+        const { resumeData } = await this.getSettings();
+        if (FormFiller && typeof FormFiller.fill === 'function') {
+          await FormFiller.fill(resumeData || {});
+        } else {
+          await this.fillApplicationForm();
+        }
 
         // Try to click submit/save if present
         const submitSelectors = ['button[type="submit"]', 'button:contains("Submit")', 'button:contains("Send")', 'input[type="submit"]', 'button:contains("Finish")'];
@@ -138,6 +161,11 @@ class JobHunterContent {
             el.click();
             break;
           }
+        }
+
+        // Log application if ApplicationTracker is available
+        if (window.ApplicationTracker && typeof window.ApplicationTracker.log === 'function') {
+          window.ApplicationTracker.log(this.jobData || {}, 'applied', { url: window.location.href });
         }
 
         console.log('Auto-apply attempted');
