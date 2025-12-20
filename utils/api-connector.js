@@ -20,15 +20,16 @@ const ApiConnector = (() => {
     };
 
     // Special handling for Google Generative Language API (REST)
+
     if (provider === 'google') {
-      // Google expects model in the path and apiKey as query param for API key auth
-      const modelId = model || 'models/text-bison-001';
+      // Google Gemini API expects model in the path, e.g. 'gemini-pro', and v1 endpoint
+      const modelId = model || 'gemini-pro';
       const promptText = messagesToPrompt(messages);
-      const url = `https://generativelanguage.googleapis.com/v1beta2/models/${encodeURIComponent(modelId)}:generateText?key=${encodeURIComponent(apiKey)}`;
+      // v1 endpoint for Gemini
+      const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const gbody = {
-        prompt: { text: promptText },
-        temperature: temp,
-        maxOutputTokens: max_tokens
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { temperature: temp, maxOutputTokens: max_tokens }
       };
       const headers = { 'Content-Type': 'application/json' };
       let res;
@@ -43,8 +44,10 @@ const ApiConnector = (() => {
       }
       const json = await res.json().catch(() => null);
       if (!json) throw new Error('google returned invalid JSON');
-      // Google returns `candidates` array with text in `output` or `content` depending on version
-      if (json.candidates && json.candidates[0]) return json.candidates[0].output || json.candidates[0].content || JSON.stringify(json);
+      // Gemini returns candidates array with content.parts[0].text
+      if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0].text) {
+        return json.candidates[0].content.parts[0].text;
+      }
       // fallback
       return JSON.stringify(json);
     }
