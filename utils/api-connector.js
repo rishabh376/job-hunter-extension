@@ -82,6 +82,12 @@ const ApiConnector = (() => {
     return JSON.stringify(json);
   };
 
+
   return { call };
 })();
+
+// Expose globally for options.js and popup.js
+if (typeof window !== 'undefined') {
+  window.ApiConnector = ApiConnector;
+}
 
