@@ -1,11 +1,11 @@
 // Decide *whether* we should apply (rate-limit + rules)
 const JobScanner = (() => {
   const RULES = {
-    maxPerHour: 10,
-    minSalary:  40000, // USD
-    mustHave:   ['javascript'], // quick filter
-    notInTitle: ['senior', 'lead', 'principal', 'staff'],
-    locales:    ['remote', 'hybrid', 'new york', 'san francisco']
+    maxPerHour: 13,
+    minSalary:  1700000, // INR per year (₹17LPA)
+    mustHave:   ['Azure DevOps', 'DevOps', 'Kubernetes', 'Terraform', 'GitHub Actions', 'Git'], // quick filter
+    notInTitle: ['manager', 'director', 'principal', 'lead'], // exclude these titles
+    locales:    ['remote', 'hybrid', 'Pune', 'Bangalore', 'Delhi', 'Gurgaon', 'Mumbai', 'India', 'Chennai', 'Hyderabad', 'Noida', 'Kolkata'], // expanded Indian cities
   };
 
   const shouldApply = async (jobData) => {
@@ -19,7 +19,7 @@ const JobScanner = (() => {
     const hasMustHave = RULES.mustHave.length === 0 ||
                         RULES.mustHave.some(k => description.toLowerCase().includes(k));
 
-    const salaryOK = !salary || extractSalary(salary) >= RULES.minSalary;
+    const salaryOK = !salary || extractSalaryINR(salary) >= RULES.minSalary;
     const localeOK = RULES.locales.some(l => location.toLowerCase().includes(l));
 
     return hasMustHave && salaryOK && localeOK;
@@ -34,12 +34,31 @@ const JobScanner = (() => {
       res(recent.length);
     });
   });
-// Extract the minimum salary from a string like "$60,000 - $80,000 a year"
-  const extractSalary = (txt) => {
-    const m = txt.match(/\$?(\d{1,3}(?:,\d{3})*)/g);
+
+  // Extract minimum salary from a string, supporting INR and USD
+  const extractSalaryINR = (txt) => {
+    // Try to match INR (₹, INR, LPA, etc.)
+    const inrMatch = txt.match(/(₹|INR)?\s*([\d,.]+)\s*(LPA|lpa|lakhs?|per annum)?/);
+    if (inrMatch) {
+      let num = inrMatch[2].replace(/,/g, '');
+      let val = parseFloat(num);
+      // If LPA or lakhs, multiply by 100000
+      if (/LPA|lpa|lakh/i.test(inrMatch[3] || '')) val *= 100000;
+      // If value is very low, assume it's in lakhs
+      if (val < 1000) val *= 100000;
+      return val;
+    }
+    // Fallback: try USD (convert to INR, rough rate)
+    const usdMatch = txt.match(/\$([\d,]+)/);
+    if (usdMatch) {
+      let usd = parseInt(usdMatch[1].replace(/,/g, ''));
+      return usd * 83; // Approximate USD to INR
+    }
+    // Fallback: extract any number
+    const m = txt.match(/(\d{1,3}(?:,\d{3})*)/g);
     if (!m) return Infinity;
-    const nums = m.map(n => parseInt(n.replace(/,/g,'')));
-    return Math.min(...nums); // take lower bound
+    const nums = m.map(n => parseInt(n.replace(/,/g, '')));
+    return Math.min(...nums);
   };
 
   return { shouldApply };

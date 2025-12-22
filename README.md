@@ -183,7 +183,7 @@ job-hunter-extension/
    - Or go to `chrome://extensions/` → Job Hunter Pro → "Options"
 
 2. **Fill in Resume Information**:
-   - **Contact**: Name, email, phone, location
+  - **Contact**: Name, email, phone, location (city/state in India, e.g., "Bangalore, Karnataka")
    - **Summary**: Brief professional summary
    - **Skills**: List of skills (comma-separated)
    - **Experience**: Previous jobs (title, company, dates, description)
@@ -464,7 +464,29 @@ logOk('My feature tests');
 **Resume Data** (`chrome.storage.sync.resumeData`):
 ```json
 {
-  "contact": { "name": "...", "email": "...", "phone": "...", "location": "..." },
+  "contact": { "name": "...", "email": "...", "phone": "...", "location": "Bangalore, Karnataka, India" },
+  ## India-Centric Salary & Location Logic
+
+  **Job Filtering**
+  - The extension now uses Indian salary standards: minimum salary is ₹6,00,000 per year (6 LPA), parsed from INR, LPA, lakhs, or USD (converted to INR).
+  - Only jobs with locations matching Indian cities (e.g., Pune, Bangalore, Delhi, Gurgaon, Mumbai, Chennai, Hyderabad, Noida, Kolkata) or "remote"/"hybrid" are considered.
+  - Salary and location logic is enforced in `auto-applier/job-scanner.js`.
+
+  **Resume Data**
+  - When entering your location, use Indian city/state (e.g., "Hyderabad, Telangana").
+
+  **Example:**
+  ```json
+  {
+    "contact": {
+      "name": "Amit Kumar",
+      "email": "amit@example.com",
+      "phone": "+91-9876543210",
+      "location": "Pune, Maharashtra, India"
+    },
+    ...
+  }
+  ```
   "summary": "...",
   "skills": ["...", "..."],
   "experience": [{ "title": "...", "company": "...", "startDate": "...", "endDate": "...", "description": "..." }]

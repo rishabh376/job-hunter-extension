@@ -4,7 +4,7 @@
 const { listGoogleModels } = require('./utils/api-connector');
 
 (async () => {
-  const apiKey = 'AIzaSyA5lnOTTbM9eSaDtdg9F4NU4PETMo5nYK0'; // TODO: Replace with your real key
+  const apiKey = 'Your API KEY'; // TODO: Replace with your real key
   try {
     const models = await listGoogleModels(apiKey);
     console.log('Available Google Gemini models:', models);
