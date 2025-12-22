@@ -50,9 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const state = document.getElementById('state');
   const resumeFile = document.getElementById('resumeFile');
   const resumeInfo = document.getElementById('resumeInfo');
-  const aiProvider = document.getElementById('aiProvider');
-  const openaiApiKey = document.getElementById('openaiApiKey');
-  const aiModel = document.getElementById('aiModel');
+    const aiProvider = document.getElementById('aiProvider');
+    const openaiApiKey = document.getElementById('openaiApiKey');
+    const aiModel = document.getElementById('aiModel');
+    // Advanced: allow endpoint override for local LLMs
+    const aiEndpoint = document.getElementById('aiEndpoint');
   const saveBtn = document.getElementById('saveBtn');
   const clearBtn = document.getElementById('clearBtn');
   const status = document.getElementById('status');
@@ -141,10 +143,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load AI settings
   async function loadAiSettings() {
     try {
-      const s = await StoragePromise.get(['aiProvider', 'openaiApiKey', 'aiModel', 'allowPlainApiKey']);
+      const s = await StoragePromise.get(['aiProvider', 'openaiApiKey', 'aiModel', 'allowPlainApiKey', 'aiEndpoint']);
       if (aiProvider) aiProvider.value = s.aiProvider || 'openai';
       if (openaiApiKey) openaiApiKey.value = s.openaiApiKey || '';
       if (aiModel) aiModel.value = s.aiModel || 'gpt-3.5-turbo';
+      if (aiEndpoint && s.aiEndpoint) aiEndpoint.value = s.aiEndpoint;
       if (allowPlainKey) allowPlainKey.checked = !!s.allowPlainApiKey;
     } catch (e) {
       console.error('loadAiSettings error', e);
@@ -261,6 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const aiSettings = {
         aiProvider: aiProvider?.value || 'openai',
         aiModel: aiModel?.value || 'gpt-3.5-turbo'
+          aiEndpoint: aiEndpoint?.value || ''
       };
 
       const allowPlain = allowPlainKey?.checked ?? false;
@@ -282,6 +286,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         await StoragePromise.set(toStore);
+        // Store endpoint in localStorage for api-connector.js
+        if (aiEndpoint && aiEndpoint.value) {
+          try { window.localStorage.setItem('aiEndpoint', aiEndpoint.value); } catch (e) {}
+        }
         setStatus(status, '✅ Saved', 2000);
       } catch (e) {
         console.error('Save error', e);

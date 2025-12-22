@@ -1,3 +1,10 @@
+    <label>Provider Endpoint (advanced, optional)
+      <input type="text" id="aiEndpoint" placeholder="http://localhost:1234 or http://localhost:8080">
+      <span class="small" style="display:block;color:#888">Override for LM Studio/Ollama (use CORS proxy if needed)</span>
+    </label>
+  <div id="corsProxyHelp" class="small" style="margin-top:10px;color:#c00">
+    <b>Note for LM Studio/Ollama users:</b> If you see network or CORS errors, run the included <code>utils/cors-proxy.js</code> (see OPTIONS-FULL-EXECUTION.md) and set the endpoint to <code>http://localhost:8080</code> in the provider settings.
+  </div>
 <!DOCTYPE html>
 <html>
 <head>
@@ -61,10 +68,21 @@
       <option value="openai">OpenAI</option>
       <option value="google">Google Generative API</option>
       <option value="ollama">Ollama (local)</option>
+      <option value="lmstudio">LM Studio (local)</option>
     </select>
   </label>
-  <label>API Key (if using provider)<input type="text" id="openaiApiKey" placeholder="sk-... or GOOGLE_API_KEY"></label>
-  <label>Model<input type="text" id="aiModel" placeholder="gpt-3.5-turbo"></label>
+  <label>API Key (if using provider)
+    <input type="text" id="openaiApiKey" placeholder="sk-... or GOOGLE_API_KEY">
+    <span class="small" style="display:block;color:#888">Not required for Ollama or LM Studio</span>
+  </label>
+  <label>Model
+    <input type="text" id="aiModel" placeholder="gpt-3.5-turbo or dolphin-2.2.1-mistral-7b">
+    <span class="small" style="display:block;color:#888">For LM Studio, enter the model name exactly as loaded (e.g., dolphin-2.2.1-mistral-7b)</span>
+  </label>
+    <div id="lmstudioHelp" class="small" style="margin-top:10px;color:#444">
+      <b>LM Studio usage:</b> Start LM Studio, load your model, and ensure the API is running at <code>http://localhost:1234</code>.<br>
+      Select <b>LM Studio (local)</b> as provider, enter your model name, and leave API key blank.
+    </div>
   <label>Encryption passphrase (optional)
     <input type="password" id="apiPassphrase" placeholder="Passphrase to encrypt API key">
   </label>

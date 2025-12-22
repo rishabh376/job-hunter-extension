@@ -3,7 +3,8 @@ const ApiConnector = (() => {
   const ENDPOINTS = {
     openai: 'https://api.openai.com/v1/chat/completions',
     github: 'https://models.inference.ai.azure.com/chat/completions', // free tier
-    ollama: 'http://localhost:11434/api/chat'                       // local, $0
+    ollama: 'http://localhost:11434/api/chat',                       // local, $0
+    lmstudio: 'http://localhost:1234/v1/chat/completions'            // local LM Studio
   };
 
   // List available models for Google Gemini
@@ -73,8 +74,15 @@ const ApiConnector = (() => {
       return JSON.stringify(json);
     }
 
-    // Fallback for other providers (openai, github, ollama)
-    const url  = ENDPOINTS[provider];
+    // Fallback for other providers (openai, github, ollama, lmstudio)
+    // Allow endpoint override for local LLMs (LM Studio/Ollama)
+    let url = ENDPOINTS[provider];
+    if (typeof window !== 'undefined' && window.localStorage && (provider === 'lmstudio' || provider === 'ollama')) {
+      try {
+        const custom = window.localStorage.getItem('aiEndpoint') || '';
+        if (custom && custom.startsWith('http')) url = custom;
+      } catch (e) {}
+    }
     if (!url) throw new Error(`Unknown provider: ${provider}`);
 
     const body = { model, messages, max_tokens, temperature: temp };
@@ -98,6 +106,13 @@ const ApiConnector = (() => {
 
     // Normalize return: Ollama uses a different shape
     if (provider === 'ollama') return json.message && json.message.content ? json.message.content : JSON.stringify(json);
+    // LM Studio: OpenAI-compatible, same as OpenAI
+    if (provider === 'lmstudio') {
+      if (json.choices && json.choices[0] && json.choices[0].message && typeof json.choices[0].message.content === 'string') {
+        return json.choices[0].message.content;
+      }
+      return JSON.stringify(json);
+    }
     // OpenAI / GitHub Models
     if (json.choices && json.choices[0] && json.choices[0].message && typeof json.choices[0].message.content === 'string') {
       return json.choices[0].message.content;
