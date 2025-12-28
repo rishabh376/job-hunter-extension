@@ -30,6 +30,7 @@
 → Read `QUICK-START.md` (5 min overview)
 → Then read `README.md` (full project guide)
 
+
 #### 🎯 **Learn how to use the Options page**
 → Read `OPTIONS-GUIDE.md` (comprehensive feature guide)
 → Check `EDGE-SETUP.md` if using Edge browser
