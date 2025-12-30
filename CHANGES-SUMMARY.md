@@ -291,6 +291,8 @@ None! ✅ All changes are additive and backward compatible.
 - Schema tests verify resume validation ✅
 - DOM tests verify UI structure ✅
 
+
+
 ### Test Coverage
 ```
 ✅ options.js handlers (manual testing required in browser)
