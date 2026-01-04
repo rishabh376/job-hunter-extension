@@ -9,6 +9,7 @@ Created a Promise-based wrapper for `chrome.storage.sync` to enable async/await 
 - `remove(keys)` - Promise-based deletion
 - Graceful error handling with fallbacks
 
+
 **Benefits:**
 - Cleaner async/await syntax
 - Reduced callback nesting
