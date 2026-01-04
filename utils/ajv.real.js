@@ -5,6 +5,7 @@
 */
 
 // BEGIN AJV UMD BUILD
+/* eslint-disable no-unused-vars */
 (function(){var e="use strict";var t=function(){/* ...minified Ajv code... */};window.Ajv=t;})();
 // END AJV UMD BUILD
 

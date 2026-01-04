@@ -50,11 +50,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const state = document.getElementById('state');
   const resumeFile = document.getElementById('resumeFile');
   const resumeInfo = document.getElementById('resumeInfo');
-    const aiProvider = document.getElementById('aiProvider');
-    const openaiApiKey = document.getElementById('openaiApiKey');
-    const aiModel = document.getElementById('aiModel');
-    // Advanced: allow endpoint override for local LLMs
-    const aiEndpoint = document.getElementById('aiEndpoint');
+
+  // Job targeting preferences
+  const jobTitleKeywords = document.getElementById('jobTitleKeywords');
+  const minSalary = document.getElementById('minSalary');
+  const maxSalary = document.getElementById('maxSalary');
+  const preferredLocations = document.getElementById('preferredLocations');
+  const excludeTitles = document.getElementById('excludeTitles');
+  const requiredSkills = document.getElementById('requiredSkills');
+  const maxAppsPerHour = document.getElementById('maxAppsPerHour');
+
+  const aiProvider = document.getElementById('aiProvider');
+  const openaiApiKey = document.getElementById('openaiApiKey');
+  const aiModel = document.getElementById('aiModel');
+  // Advanced: allow endpoint override for local LLMs
+  const aiEndpoint = document.getElementById('aiEndpoint');
   const saveBtn = document.getElementById('saveBtn');
   const clearBtn = document.getElementById('clearBtn');
   const status = document.getElementById('status');
@@ -125,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load settings from storage
   async function loadSettings() {
     try {
-      const data = await StoragePromise.get(['autoApply', 'resumeData']);
+      const data = await StoragePromise.get(['autoApply', 'resumeData', 'jobTitleKeywords', 'minSalary', 'maxSalary', 'preferredLocations', 'excludeTitles', 'requiredSkills', 'maxAppsPerHour']);
       if (autoApply) autoApply.checked = !!data.autoApply;
       const r = data.resumeData || {};
       if (firstName) firstName.value = r.firstName || '';
@@ -135,6 +145,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (city) city.value = r.city || '';
       if (state) state.value = r.state || '';
       if (r.resumeFileName && resumeInfo) resumeInfo.textContent = `Saved file: ${r.resumeFileName}`;
+
+      // Load job targeting preferences
+      if (jobTitleKeywords) jobTitleKeywords.value = data.jobTitleKeywords || '';
+      if (minSalary) minSalary.value = data.minSalary || '';
+      if (maxSalary) maxSalary.value = data.maxSalary || '';
+      if (preferredLocations) preferredLocations.value = data.preferredLocations || '';
+      if (excludeTitles) excludeTitles.value = data.excludeTitles || '';
+      if (requiredSkills) requiredSkills.value = data.requiredSkills || '';
+      if (maxAppsPerHour) maxAppsPerHour.value = data.maxAppsPerHour || '5';
     } catch (e) {
       console.error('loadSettings error', e);
     }
@@ -263,8 +282,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const aiSettings = {
         aiProvider: aiProvider?.value || 'openai',
-        aiModel: aiModel?.value || 'gpt-3.5-turbo'
-          aiEndpoint: aiEndpoint?.value || ''
+        aiModel: aiModel?.value || 'gpt-3.5-turbo',
+        aiEndpoint: aiEndpoint?.value || ''
       };
 
       const allowPlain = allowPlainKey?.checked ?? false;
@@ -272,7 +291,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         autoApply: autoApply?.checked ?? false,
         resumeData,
         ...aiSettings,
-        allowPlainApiKey: allowPlain
+        allowPlainApiKey: allowPlain,
+        // Job targeting preferences
+        jobTitleKeywords: jobTitleKeywords?.value || '',
+        minSalary: minSalary?.value || '',
+        maxSalary: maxSalary?.value || '',
+        preferredLocations: preferredLocations?.value || '',
+        excludeTitles: excludeTitles?.value || '',
+        requiredSkills: requiredSkills?.value || '',
+        maxAppsPerHour: maxAppsPerHour?.value || '5'
       };
 
       if (openaiApiKey?.value) {

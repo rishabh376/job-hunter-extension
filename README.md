@@ -1,4 +1,4 @@
-# Job Hunter Pro — Browser Extension
+# i@pply — Browser Extension
 
 A powerful, production-ready Chrome/Firefox extension for intelligent job hunting with AI-powered resume optimization, automated job application, and secure API key management.
 
@@ -24,13 +24,30 @@ A powerful, production-ready Chrome/Firefox extension for intelligent job huntin
 
 - **Detect job postings** from popular job boards (LinkedIn, Indeed, Glassdoor).
 - **Extract job descriptions** and relevant metadata automatically.
-- **Optimize resumes** using OpenAI API (or alternative AI providers like Ollama, GitHub Models).
+- **Optimize resumes** using multiple AI providers (OpenAI, Anthropic Claude, Google Gemini, Ollama, GitHub Models, LM Studio).
 - **Auto-apply** to jobs with intelligent form filling.
 - **Track applications** with statistics (applications sent, success rate).
 - **Secure API keys** with encryption and session-based unlocking.
 - **Validate resume data** against JSON Schema with browser-based Ajv validation.
 
 The extension is built with **Manifest V3** (Chrome's latest extension standard), supports **encrypted storage**, **schema validation**, and includes **comprehensive automated tests** with CI/CD integration.
+
+---
+
+## 🎯 Quick Start & Demo
+
+### For Sales/Marketing Demo
+See [`DEMO-GUIDE.md`](DEMO-GUIDE.md) for complete demo walkthrough with screenshots.
+
+### For API Integration Setup
+See [`API-INTEGRATION-GUIDE.md`](API-INTEGRATION-GUIDE.md) for detailed API plugin setup and local LLM configuration.
+
+### Automated Demo Setup
+```bash
+# Setup complete demo environment
+chmod +x setup-demo.sh
+./setup-demo.sh
+```
 
 ---
 
@@ -583,5 +600,5 @@ MIT License — See LICENSE file for details
 
 ---
 
-**Last Updated**: November 12, 2025
-**Version**: 1.0.0
+**Last Updated**: January 5 , 2026
+**Version**: 1.0.1

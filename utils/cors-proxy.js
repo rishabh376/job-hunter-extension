@@ -11,19 +11,19 @@ const target = 'http://localhost:1234';
 app.use('/', createProxyMiddleware({
   target,
   changeOrigin: true,
-  onProxyRes: (proxyRes, req, res) => {
+  onProxyRes: (proxyRes, _req, _res) => {
     proxyRes.headers['Access-Control-Allow-Origin'] = '*';
     proxyRes.headers['Access-Control-Allow-Headers'] = '*';
     proxyRes.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS';
   },
-  onProxyReq: (proxyReq, req, res) => {
-    if (req.method === 'OPTIONS') {
-      res.writeHead(200, {
+  onProxyReq: (_proxyReq, _req, _res) => {
+    if (_req.method === 'OPTIONS') {
+      _res.writeHead(200, {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
       });
-      res.end();
+      _res.end();
     }
   },
   selfHandleResponse: false

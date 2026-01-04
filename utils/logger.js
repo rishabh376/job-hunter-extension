@@ -21,3 +21,8 @@ const Logger = (() => {
   };
 })();
 
+// Expose globally
+if (typeof window !== 'undefined') {
+  window.Logger = Logger;
+}
+

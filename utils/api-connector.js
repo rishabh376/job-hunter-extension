@@ -4,33 +4,77 @@ const ApiConnector = (() => {
     openai: 'https://api.openai.com/v1/chat/completions',
     github: 'https://models.inference.ai.azure.com/chat/completions', // free tier
     ollama: 'http://localhost:11434/api/chat',                       // local, $0
-    lmstudio: 'http://localhost:1234/v1/chat/completions'            // local LM Studio
+    lmstudio: 'http://localhost:1234/v1/chat/completions',           // local LM Studio
+    anthropic: 'https://api.anthropic.com/v1/messages'               // Claude
   };
 
-  // List available models for Google Gemini
-  const listGoogleModels = async (apiKey) => {
-    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
-      throw new Error('Google provider requires an API key.');
+  // List available models for different providers
+  const listModels = async (provider, apiKey) => {
+    switch (provider) {
+      case 'google': {
+        if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+          throw new Error('Google provider requires an API key.');
+        }
+        const url = `https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(apiKey)}`;
+        const headers = { 'Content-Type': 'application/json' };
+        let res;
+        try {
+          res = await fetch(url, { method: 'GET', headers });
+        } catch (networkErr) {
+          throw new Error(`google network error: ${networkErr.message || networkErr}`);
+        }
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '<no body>');
+          throw new Error(`google error: ${res.status} ${res.statusText} - ${txt}`);
+        }
+        const json = await res.json().catch(() => null);
+        if (!json) throw new Error('google returned invalid JSON');
+        return json;
+      }
+      case 'openai':
+        // OpenAI doesn't have a public list endpoint, return common models
+        return {
+          models: [
+            { name: 'gpt-4o', description: 'Most advanced GPT-4 model' },
+            { name: 'gpt-4o-mini', description: 'Fast and affordable' },
+            { name: 'gpt-4-turbo', description: 'Latest GPT-4 Turbo' },
+            { name: 'gpt-3.5-turbo', description: 'Fast and cost-effective' }
+          ]
+        };
+      case 'github':
+        // GitHub Models inference has specific models
+        return {
+          models: [
+            { name: 'gpt-4o', description: 'GPT-4o via GitHub' },
+            { name: 'gpt-4o-mini', description: 'GPT-4o mini via GitHub' },
+            { name: 'Phi-3-medium-128k-instruct', description: 'Microsoft Phi-3' }
+          ]
+        };
+      case 'ollama':
+        try {
+          const res = await fetch('http://localhost:11434/api/tags');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          return { models: data.models || [] };
+        } catch (err) {
+          throw new Error(`Ollama list models failed: ${err.message}`);
+        }
+      case 'anthropic':
+        return {
+          models: [
+            { name: 'claude-3-5-sonnet-20241022', description: 'Most intelligent Claude model' },
+            { name: 'claude-3-5-haiku-20241022', description: 'Fast and cost-effective' },
+            { name: 'claude-3-opus-20240229', description: 'Powerful for complex tasks' },
+            { name: 'claude-3-sonnet-20240229', description: 'Balanced performance' }
+          ]
+        };
+      default:
+        throw new Error(`Model listing not supported for provider: ${provider}`);
     }
-    const url = `https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(apiKey)}`;
-    const headers = { 'Content-Type': 'application/json' };
-    let res;
-    try {
-      res = await fetch(url, { method: 'GET', headers });
-    } catch (networkErr) {
-      throw new Error(`google network error: ${networkErr.message || networkErr}`);
-    }
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '<no body>');
-      throw new Error(`google error: ${res.status} ${res.statusText} - ${txt}`);
-    }
-    const json = await res.json().catch(() => null);
-    if (!json) throw new Error('google returned invalid JSON');
-    return json;
   };
   const call = async ({provider = 'openai', apiKey, model, messages, max_tokens = 1000, temp = 0.7}) => {
     // Providers that require an API key
-    const requiresKey = provider === 'openai' || provider === 'github' || provider === 'google';
+    const requiresKey = provider === 'openai' || provider === 'github' || provider === 'google' || provider === 'anthropic';
     if (requiresKey && (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '')) {
       throw new Error(`${provider} requires an API key. Please unlock or provide a valid key.`);
     }
@@ -71,6 +115,46 @@ const ApiConnector = (() => {
         return json.candidates[0].content.parts[0].text;
       }
       // fallback
+      return JSON.stringify(json);
+    }
+
+    // Special handling for Anthropic Claude
+    if (provider === 'anthropic') {
+      const url = ENDPOINTS.anthropic;
+      // Convert messages to Anthropic format
+      const systemMessage = messages.find(m => m.role === 'system');
+      const chatMessages = messages.filter(m => m.role !== 'system').map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content
+      }));
+      
+      const abody = {
+        model: model || 'claude-3-sonnet-20240229',
+        max_tokens: max_tokens,
+        temperature: temp,
+        system: systemMessage ? systemMessage.content : undefined,
+        messages: chatMessages
+      };
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      };
+      let res;
+      try {
+        res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(abody) });
+      } catch (networkErr) {
+        throw new Error(`anthropic network error: ${networkErr.message || networkErr}`);
+      }
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '<no body>');
+        throw new Error(`anthropic error: ${res.status} ${res.statusText} - ${txt}`);
+      }
+      const json = await res.json().catch(() => null);
+      if (!json) throw new Error('anthropic returned invalid JSON');
+      if (json.content && json.content[0] && json.content[0].text) {
+        return json.content[0].text;
+      }
       return JSON.stringify(json);
     }
 
@@ -122,7 +206,7 @@ const ApiConnector = (() => {
   };
 
 
-  return { call, listGoogleModels };
+  return { call, listModels };
 })();
 
 

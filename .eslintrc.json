@@ -2,14 +2,36 @@
   "env": {
     "browser": true,
     "node": true,
-    "es2021": true
+    "es2021": true,
+    "webextensions": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {
     "ecmaVersion": 12,
     "sourceType": "module"
   },
+  "globals": {
+    "chrome": "readonly",
+    "importScripts": "readonly",
+    "ApiConnector": "readonly",
+    "CryptoHelper": "readonly",
+    "SchemaValidator": "readonly",
+    "FileUtils": "readonly",
+    "Logger": "readonly",
+    "StoragePromise": "readonly",
+    "ApplicationTracker": "readonly",
+    "FormFiller": "readonly",
+    "JobScanner": "readonly",
+    "ResumeOptimizer": "readonly",
+    "StorageManager": "readonly",
+    "Ajv": "readonly",
+    "ajvFormats": "readonly",
+    "describe": "readonly",
+    "it": "readonly"
+  },
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-empty": ["error", { "allowEmptyCatch": true }]
   }
 }
