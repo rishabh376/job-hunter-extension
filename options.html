@@ -9,7 +9,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Job Hunter Pro - Settings</title>
+  <title>i@pply - Settings</title>
   <style>
     body{font-family: Arial, Helvetica, sans-serif;padding:16px;max-width:720px}
     label{display:block;margin-top:8px}
@@ -27,7 +27,7 @@
     .modal-buttons{margin-top:16px;display:flex;gap:8px;justify-content:flex-end}
     .modal-buttons button{padding:8px 16px;border:1px solid #ddd;background:#f0f0f0;cursor:pointer;border-radius:4px}
     .modal-buttons button.danger{background:#ff4444;color:white;border-color:#cc0000}
-    .modal-buttons button:hover{background:#e0e0e0}
+    .modal-buttons button:hover{background:#05814d}
     .modal-buttons button.danger:hover{background:#dd0000}
     .status-line{margin-top:8px;padding:8px;background:#e8f5e9;border-left:3px solid #4caf50;font-size:12px}
     .status-line.warn{background:#fff3e0;border-left-color:#ff9800}
@@ -58,6 +58,42 @@
     <div class="col"><label>State<input type="text" id="state"></label></div>
   </div>
 
+  <h2>Job Targeting Preferences</h2>
+  <label>Job Title Keywords
+    <input type="text" id="jobTitleKeywords" placeholder="e.g., Software Engineer, Developer, DevOps">
+    <span class="small" style="display:block;color:#888">Comma-separated keywords to match in job titles</span>
+  </label>
+  <div class="row">
+    <div class="col">
+      <label>Minimum Salary (₹ INR)
+        <input type="number" id="minSalary" placeholder="500000" min="0">
+        <span class="small" style="display:block;color:#888">Minimum annual salary in rupees</span>
+      </label>
+    </div>
+    <div class="col">
+      <label>Maximum Salary (₹ INR)
+        <input type="number" id="maxSalary" placeholder="2000000" min="0">
+        <span class="small" style="display:block;color:#888">Maximum annual salary in rupees (optional)</span>
+      </label>
+    </div>
+  </div>
+  <label>Preferred Locations
+    <input type="text" id="preferredLocations" placeholder="e.g., Bangalore, Mumbai, Remote, Hybrid">
+    <span class="small" style="display:block;color:#888">Comma-separated cities/locations to target</span>
+  </label>
+  <label>Exclude Job Titles
+    <input type="text" id="excludeTitles" placeholder="e.g., Manager, Director, Lead, Principal">
+    <span class="small" style="display:block;color:#888">Comma-separated titles to avoid</span>
+  </label>
+  <label>Skills/Keywords (Required)
+    <input type="text" id="requiredSkills" placeholder="e.g., JavaScript, React, Python, AWS">
+    <span class="small" style="display:block;color:#888">Comma-separated skills that must be mentioned in job description</span>
+  </label>
+  <label>Max Applications per Hour
+    <input type="number" id="maxAppsPerHour" placeholder="13" min="1" max="50">
+    <span class="small" style="display:block;color:#888">Rate limiting to avoid being flagged</span>
+  </label>
+
   <h2>Resume File (PDF)</h2>
   <input type="file" id="resumeFile" accept="application/pdf">
   <div id="resumeInfo" class="small"></div>
@@ -66,6 +102,7 @@
     <label>Provider
     <select id="aiProvider">
       <option value="openai">OpenAI</option>
+      <option value="anthropic">Anthropic Claude</option>
       <option value="google">Google Generative API</option>
       <option value="ollama">Ollama (local)</option>
       <option value="lmstudio">LM Studio (local)</option>

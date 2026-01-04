@@ -127,3 +127,8 @@ class ResumeOptimizer {
     return description;
   }
 }
+
+// Expose globally
+if (typeof window !== 'undefined') {
+  window.ResumeOptimizer = ResumeOptimizer;
+}

@@ -47,6 +47,17 @@
     try {
       if (typeof Ajv !== 'undefined') {
         const ajv = new Ajv({ allErrors: true });
+        // Add formats if available (for Node.js with ajv-formats)
+        try {
+          if (typeof require !== 'undefined') {
+            const formats = require('ajv-formats');
+            formats(ajv);
+          } else if (typeof ajvFormats !== 'undefined') {
+            ajvFormats(ajv);
+          }
+        } catch (formatErr) {
+          console.warn('ajv-formats not available, email validation may fail');
+        }
         const validate = ajv.compile(RESUME_SCHEMA);
         const valid = validate(obj);
         if (!valid) {

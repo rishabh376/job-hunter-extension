@@ -1,6 +1,6 @@
 // Simple test runner using Node (no external deps)
 const assert = require('assert');
-const fs = require('fs');
+// const fs = require('fs');
 const path = require('path');
 
 function logOk(msg){ console.log('\x1b[32m%s\x1b[0m', 'PASS:', msg); }
@@ -66,7 +66,8 @@ function logFail(msg){ console.log('\x1b[31m%s\x1b[0m', 'FAIL:', msg); }
 
     // Background API flow tests
     try {
-      const bgTest = require('./background.test');
+      // const bgTest = require('./background.test');
+      require('./background.test');
       logOk('Background API flow tests');
     } catch (e) {
       console.log('Background API tests skipped/failed:', e.message || e);

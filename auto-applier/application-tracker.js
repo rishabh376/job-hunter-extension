@@ -40,5 +40,10 @@ const ApplicationTracker = (() => {
   return { log, getStats };
 })();
 
+// Expose globally
+if (typeof window !== 'undefined') {
+  window.ApplicationTracker = ApplicationTracker;
+}
+
 
 

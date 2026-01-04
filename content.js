@@ -16,6 +16,7 @@ class JobHunterContent {
     const hostname = window.location.hostname;
     if (hostname.includes('linkedin.com')) return 'linkedin';
     if (hostname.includes('indeed.com')) return 'indeed';
+    if (hostname.includes('naukri.com')) return 'naukri';
     if (hostname.includes('glassdoor.com')) return 'glassdoor';
     if (hostname.includes('monster.com')) return 'monster';
     if (hostname.includes('ziprecruiter.com')) return 'ziprecruiter';
@@ -25,7 +26,7 @@ class JobHunterContent {
   }
 
   async init() {
-    console.log('Job Hunter Pro: Detected', this.jobBoard);
+    console.log('i@pply: Detected', this.jobBoard);
     
     // Wait for page to load
     await this.waitForPageLoad();
@@ -64,6 +65,7 @@ class JobHunterContent {
     const extractors = {
       linkedin: this.extractLinkedInData,
       indeed: this.extractIndeedData,
+      naukri: this.extractNaukriData,
       glassdoor: this.extractGlassdoorData,
       monster: this.extractMonsterData,
       ziprecruiter: this.extractZipRecruiterData,
@@ -93,6 +95,20 @@ class JobHunterContent {
     return { title, company, location, description };
   }
 
+  extractNaukriData() {
+    // Naukri.com selectors (may need updates based on site changes)
+    const title = document.querySelector('h1.jd-header-title')?.textContent?.trim() ||
+                  document.querySelector('[class*="job-title"]')?.textContent?.trim();
+    const company = document.querySelector('a.jd-cp-name')?.textContent?.trim() ||
+                    document.querySelector('[class*="company-name"]')?.textContent?.trim();
+    const location = document.querySelector('.jd-loc')?.textContent?.trim() ||
+                     document.querySelector('[class*="location"]')?.textContent?.trim();
+    const description = document.querySelector('.jd-desc')?.textContent?.trim() ||
+                        document.querySelector('[class*="job-description"]')?.textContent?.trim();
+    
+    return { title, company, location, description };
+  }
+
   extractGenericData() {
     // Try to find common job posting elements
     const title = document.querySelector('h1, [class*="title"], [class*="job-title"]')?.textContent?.trim();
@@ -111,7 +127,7 @@ class JobHunterContent {
 
 
   async autoApply() {
-    console.log('Job Hunter Pro: Starting auto-application');
+    console.log('i@pply: Starting auto-application');
     // Use JobScanner to decide if we should apply (if available)
     if (typeof JobScanner?.shouldApply === 'function') {
       const should = await JobScanner.shouldApply(this.jobData || {});

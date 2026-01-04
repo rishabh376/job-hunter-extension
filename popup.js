@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   popupLockBtn.addEventListener('click', () => {
     // Lock by asking background to clear unlocked key
-    chrome.runtime.sendMessage({ action: 'unlockApiKey', apiKey: null }, (resp) => {
+    chrome.runtime.sendMessage({ action: 'unlockApiKey', apiKey: null }, (_resp) => {
       unlockStatus.textContent = 'API: locked';
       unlockStatus.style.color = '#bf360c';
     });

@@ -64,10 +64,16 @@ const FormFiller = (() => {
   const base64ToFile = (b64, filename) => {
     const arr = b64.split(','), mime = arr[0].match(/:(.*?);/)[1],
           bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
-    while(n--) u8[n] = bstr.charCodeAt(n);
+    let i = n;
+    while(i--) u8[i] = bstr.charCodeAt(i);
     return new File([u8], filename, { type: mime });
   };
 
   return { fill };
 })();
+
+// Expose globally
+if (typeof window !== 'undefined') {
+  window.FormFiller = FormFiller;
+}
 

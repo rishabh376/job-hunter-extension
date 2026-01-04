@@ -1,13 +1,14 @@
 {
   "name": "job-hunter-extension",
-  "version": "1.0.0",
-  "description": "Job Hunter Pro browser extension",
+  "version": "1.1.0",
+  "description": "i@pply browser extension",
   "scripts": {
     "test": "node ./tests/run-tests.js",
     "lint": "eslint . --ext .js"
   },
   "devDependencies": {
     "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
     "eslint": "^8.40.0",
     "jsdom": "^22.1.0"
   },

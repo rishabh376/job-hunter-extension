@@ -36,14 +36,14 @@ const chrome = {
 global.chrome = chrome;
 
 // Simulate background.js logic
-const background = require('../background.js');
+// const background = require('../background.js');
 
 describe('Background API flows', () => {
   it('should unlock API key for session', () => {
-    let unlockedApiKey = null;
+    // let unlockedApiKey = null;
     chrome.runtime.sendMessage({ action: 'unlockApiKey', apiKey: 'test-key' }, (resp) => {
       assert(resp.unlocked === true);
-      unlockedApiKey = 'test-key';
+      // unlockedApiKey = 'test-key';
     });
     chrome.runtime.sendMessage({ action: 'getApiUnlockedStatus' }, (resp) => {
       assert(resp.unlocked === true);
