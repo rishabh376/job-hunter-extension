@@ -8,6 +8,7 @@ This guide provides complete step-by-step instructions for integrating AI provid
 
 ## Table of Contents
 
+
 1. [Cloud AI Setup](#cloud-ai-setup)
 2. [Local LLM Setup](#local-llm-setup)
 3. [Auto-Apply Workflow](#auto-apply-workflow)
